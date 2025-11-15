@@ -1,10 +1,11 @@
 package com.bluebed;
 
 import com.bluebed.strip.StripRegistry;
-import com.bluebed.strip.StripType;
 import io.github.togar2.fluids.MinestomFluids;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.TextColor;
 import net.minestom.server.Auth;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.GameMode;
@@ -23,13 +24,13 @@ import net.minestom.server.network.ConnectionState;
 import net.minestom.server.network.packet.client.play.ClientInputPacket;
 
 import java.util.HashMap;
-import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 public class Main {
     private static final HashMap<UUID, Game> games = new HashMap<>();
     private static final StripRegistry stripRegistry = new StripRegistry();
-    private static final Random random = new Random();
 
     private static BossBar bossBar;
 
@@ -46,7 +47,7 @@ public class Main {
 
         InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         instance.setChunkSupplier(LightingChunk::new);
-        instance.setGenerator(new CrossyChunkCreator(random));
+        instance.setGenerator(new CrossyChunkCreator(123));
 
         GlobalEventHandler eventHandler = MinecraftServer.getGlobalEventHandler();
         registerEvents(eventHandler, instance);
@@ -86,10 +87,27 @@ public class Main {
                 }
         );
 
-        eventHandler.addListener(ServerTickMonitorEvent.class, event -> {
-            TickMonitor monitor = event.getTickMonitor();
 
-            bossBar.name(Component.text("MSPT: " + monitor.getTickTime()));
+        eventHandler.addListener(ServerTickMonitorEvent.class, new Consumer<>() {
+            long lastBossBarUpdate = System.currentTimeMillis();
+
+            @Override
+            public void accept(ServerTickMonitorEvent event) {
+                if (System.currentTimeMillis() - lastBossBarUpdate < 500) return;
+                lastBossBarUpdate = System.currentTimeMillis();
+
+                double mspt = event.getTickMonitor().getTickTime();
+
+                TextComponent bossBarMessage = Component
+                        .text("MSPT: ")
+                        .color(TextColor.color(0x00FF00))
+                        .append(Component
+                                .text("%.2fms".formatted(mspt))
+                                .color(TextColor.color(0xFFFF00))
+                        );
+                bossBar.name(bossBarMessage);
+                bossBar.progress(mspt >= 50 ? 1 : (float) mspt / 50);
+            }
         });
 
         eventHandler.addListener(EntityTickEvent.class, _ -> {

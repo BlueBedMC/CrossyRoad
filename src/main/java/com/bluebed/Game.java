@@ -12,6 +12,7 @@ import net.minestom.server.network.packet.client.play.ClientInputPacket;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
 import net.minestom.server.network.packet.server.play.EntityHeadLookPacket;
 import net.minestom.server.network.packet.server.play.EntityRotationPacket;
+import net.minestom.server.tag.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
