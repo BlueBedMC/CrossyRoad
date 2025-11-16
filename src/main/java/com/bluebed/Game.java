@@ -1,5 +1,10 @@
 package com.bluebed;
 
+import com.bluebed.font.NormalFont;
+import com.bluebed.structure.Structure;
+import lombok.Getter;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
@@ -12,21 +17,30 @@ import net.minestom.server.network.packet.client.play.ClientInputPacket;
 import net.minestom.server.network.packet.server.play.EntityAttributesPacket;
 import net.minestom.server.network.packet.server.play.EntityHeadLookPacket;
 import net.minestom.server.network.packet.server.play.EntityRotationPacket;
-import net.minestom.server.tag.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+@Getter
 public class Game {
     private final Player player;
     private final Instance instance;
     private Entity armorStand;
     private Entity chicken;
+    private BossBar bossBar;
 
     private boolean removed = false;
 
+    private int currentScore = 0,
+        bestScore = 0;
+    private int coins = 0;
+
     private float chickenYaw = 0;
     private long lastInput = System.currentTimeMillis();
+
+    private final Set<Structure> structures = ConcurrentHashMap.newKeySet();
 
     public Game(Player player, Instance instance) {
         this.player = player;
@@ -34,6 +48,16 @@ public class Game {
     }
 
     public void init() {
+        // for stats and shi ig
+        bossBar = BossBar.bossBar(
+                Component.text(""),
+                0.5F,
+                BossBar.Color.BLUE,
+                BossBar.Overlay.PROGRESS
+        );
+
+        player.showBossBar(bossBar);
+
         // chicken
         chicken = new Entity(EntityType.CHICKEN);
         Pos spawnPosition = new Pos(0, 72, -2);
@@ -68,6 +92,25 @@ public class Game {
         armorStand.teleport(playerPos);
 
         chickenLookAndRotation(player);
+
+        updateBossBar();
+
+        for (Structure structure : structures) {
+            structure.tick(instance, instance.generator());
+        }
+    }
+
+    private void updateBossBar() {
+        String numberStr = Integer.toString(currentScore);
+        StringBuilder result = new StringBuilder();
+
+        for (char c : numberStr.toCharArray()) {
+            int digit = c - '0';
+            result.append(NormalFont.getUnicodeFromNumber(digit));
+        }
+
+        String scoreString = result.toString();
+        bossBar.name(Component.text(scoreString));
     }
 
     private void chickenLookAndRotation(Player player) {
@@ -105,6 +148,8 @@ public class Game {
 
         chicken.teleport(pos);
 
+        if (packet.forward()) currentScore++;
+
         for (Player p : chicken.getViewers()) {
             chickenLookAndRotation(p);
         }
@@ -114,5 +159,9 @@ public class Game {
         this.chicken.remove();
         this.armorStand.remove();
         this.removed = true;
+    }
+
+    public void addStructure(Structure structure) {
+        structures.add(structure);
     }
 }

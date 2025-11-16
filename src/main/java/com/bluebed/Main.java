@@ -12,6 +12,7 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.entity.EntityTickEvent;
+import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
@@ -19,22 +20,22 @@ import net.minestom.server.event.server.ServerTickMonitorEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.LightingChunk;
-import net.minestom.server.monitoring.TickMonitor;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.ConnectionState;
 import net.minestom.server.network.packet.client.play.ClientInputPacket;
 
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
 public class Main {
+
     private static final HashMap<UUID, Game> games = new HashMap<>();
     private static final StripRegistry stripRegistry = new StripRegistry();
 
     private static BossBar bossBar;
+    private static InstanceContainer lobbyInstance;
 
-    static void main() {
+    static void main(String[] args) {
         MinecraftServer server = MinecraftServer.init(new Auth.Online());
 
         bossBar = BossBar.bossBar(
@@ -44,12 +45,13 @@ public class Main {
                 BossBar.Overlay.PROGRESS
         );
 
-        InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
-        instance.setChunkSupplier(LightingChunk::new);
-        instance.setGenerator(new CrossyChunkCreator(instance, 123, stripRegistry));
+        lobbyInstance = MinecraftServer.getInstanceManager().createInstanceContainer();
+        lobbyInstance.setGenerator(unit -> unit.modifier().fillHeight(0, 40, Block.GRASS_BLOCK));
 
-        GlobalEventHandler eventHandler = MinecraftServer.getGlobalEventHandler();
-        registerEvents(eventHandler, instance);
+        GlobalEventHandler events = MinecraftServer.getGlobalEventHandler();
+
+        registerPlayerEvents(events);
+        registerTickEvents(events);
 
         MinestomFluids.init();
         MinecraftServer.getGlobalEventHandler().addChild(MinestomFluids.events());
@@ -57,20 +59,29 @@ public class Main {
         server.start("0.0.0.0", 25565);
     }
 
-    private static void registerEvents(GlobalEventHandler eventHandler, Instance instance) {
-        eventHandler.addListener(AsyncPlayerConfigurationEvent.class, event -> {
-            event.setSpawningInstance(instance);
-            event.getPlayer().setGameMode(GameMode.CREATIVE);
+
+    private static void registerPlayerEvents(GlobalEventHandler events) {
+        events.addListener(AsyncPlayerConfigurationEvent.class, event -> {
+            event.setSpawningInstance(lobbyInstance);
         });
 
-        eventHandler.addListener(PlayerSpawnEvent.class, event -> {
+        events.addListener(PlayerSpawnEvent.class, event -> {
             Player player = event.getPlayer();
-            player.showBossBar(bossBar);
+            if (!event.isFirstSpawn()) return;
 
-            Game game = new Game(player, instance);
-            game.init();
+            InstanceContainer gameInstance = MinecraftServer.getInstanceManager().createInstanceContainer();
+            gameInstance.setChunkSupplier(LightingChunk::new);
+
+            Game game = new Game(player, gameInstance);
+            gameInstance.setGenerator(new CrossyChunkCreator(game, gameInstance, 123, stripRegistry));
 
             games.put(player.getUuid(), game);
+
+            player.setInstance(gameInstance);
+            player.setGameMode(GameMode.CREATIVE);
+            //player.showBossBar(bossBar);
+
+            game.init();
         });
 
         MinecraftServer.getPacketListenerManager().setListener(
@@ -79,47 +90,52 @@ public class Main {
                 (packet, connection) -> {
                     Player player = connection.getPlayer();
                     if (player == null) return;
-                    UUID uuid = player.getUuid();
-                    Game game = games.get(uuid);
-                    if (game == null) return;
-                    game.onInputPacket(packet);
+
+                    Game game = games.get(player.getUuid());
+                    if (game != null) game.onInputPacket(packet);
                 }
         );
 
+        events.addListener(PlayerDisconnectEvent.class, event -> {
+            Game game = games.remove(event.getPlayer().getUuid());
+            if (game == null) return;
 
-        eventHandler.addListener(ServerTickMonitorEvent.class, new Consumer<>() {
-            long lastBossBarUpdate = System.currentTimeMillis();
+            Instance instance = game.getInstance();
+
+            game.remove();
+
+            MinecraftServer.getInstanceManager().unregisterInstance(instance);
+        });
+    }
+
+
+    private static void registerTickEvents(GlobalEventHandler events) {
+        events.addListener(ServerTickMonitorEvent.class, new java.util.function.Consumer<>() {
+            long last = 0;
 
             @Override
             public void accept(ServerTickMonitorEvent event) {
-                if (System.currentTimeMillis() - lastBossBarUpdate < 500) return;
-                lastBossBarUpdate = System.currentTimeMillis();
+                long now = System.currentTimeMillis();
+                if (now - last < 500) return;
+                last = now;
 
                 double mspt = event.getTickMonitor().getTickTime();
 
-                TextComponent bossBarMessage = Component
-                        .text("MSPT: ")
+                TextComponent text = Component.text("MSPT: ")
                         .color(TextColor.color(0x00FF00))
-                        .append(Component
-                                .text("%.2fms".formatted(mspt))
+                        .append(Component.text("%.2fms".formatted(mspt))
                                 .color(TextColor.color(0xFFFF00))
                         );
-                bossBar.name(bossBarMessage);
+
+                bossBar.name(text);
                 bossBar.progress(mspt >= 50 ? 1 : (float) mspt / 50);
             }
         });
 
-        eventHandler.addListener(EntityTickEvent.class, _ -> {
+        events.addListener(InstanceTickEvent.class, e -> {
             for (Game game : games.values()) {
                 game.tick();
             }
-        });
-
-        eventHandler.addListener(PlayerDisconnectEvent.class, event -> {
-           Player player = event.getPlayer();
-           Game game = games.get(player.getUuid());
-           if (game == null) return;
-           game.remove();
         });
     }
 }

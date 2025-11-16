@@ -15,6 +15,7 @@ import java.util.Random;
 
 @RequiredArgsConstructor
 public class CrossyChunkCreator implements Generator {
+    private final Game game;
     private final Instance instance;
     private final int seed;
     private final StripRegistry registry;
@@ -35,7 +36,7 @@ public class CrossyChunkCreator implements Generator {
             Point to = from.add(size.blockX(), 1, 4);
 
             StripType type = getStripTypeAt(oldType, from.blockZ());
-            block = registry.getGenerator(type).generate(instance, unit, block, from, to);
+            block = registry.getGenerator(type).generate(game, instance, unit, block, from, to);
 
             oldType = type;
         }

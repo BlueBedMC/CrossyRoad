@@ -11,24 +11,24 @@ import java.util.Map;
 
 public class StripRegistry {
     private final Map<StripType, StripGenerator> generators = Map.of(
-            StripType.GRASS, ((instance, unit, block, from, to) -> {
+            StripType.GRASS, ((game, instance, unit, block, from, to) -> {
                 Block newBlock = block == Block.LIME_CONCRETE ? Block.GREEN_CONCRETE : Block.LIME_CONCRETE;
                 unit.modifier().fill(from, to, newBlock);
                 return newBlock;
             }),
-            StripType.ROAD, ((instance, unit, block, from, to) -> {
+            StripType.ROAD, ((game, instance, unit, block, from, to) -> {
                 unit.modifier().fill(from, to, Block.BLACK_CONCRETE);
                 return Block.BLACK_CONCRETE;
             }),
-            StripType.MOTORWAY, ((instance, unit, block, from, to) -> {
+            StripType.MOTORWAY, ((game, instance, unit, block, from, to) -> {
                 unit.modifier().fill(from, to, Block.BLACK_CONCRETE);
                 return Block.BLACK_CONCRETE;
             }),
-            StripType.RIVER, ((instance, unit, block, from, to) -> {
+            StripType.RIVER, ((game, instance, unit, block, from, to) -> {
                 unit.modifier().fill(from, to, Block.BLUE_CONCRETE);
                 return Block.WATER;
             }),
-            StripType.TRAIN, ((instance, unit, block, from, to) -> {
+            StripType.TRAIN, ((game, instance, unit, block, from, to) -> {
                 unit.modifier().fill(from, to, Block.BLACK_CONCRETE);
 
                 double width = 0.4,
@@ -64,8 +64,10 @@ public class StripRegistry {
                     railBase.setInstance(instance, railsFrom.add(x + 2, 0, 0));
                 }
 
-                PoleStructure poleStructure = new PoleStructure();
-                poleStructure.generate(instance, unit, railsFrom.withX(-2));
+                PoleStructure poleStructure = new PoleStructure(railsFrom.withX(-2));
+                poleStructure.generate(instance, unit);
+
+                game.addStructure(poleStructure);
 
                 return Block.BLACK_CONCRETE;
             })
