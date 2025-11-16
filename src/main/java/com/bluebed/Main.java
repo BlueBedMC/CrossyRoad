@@ -36,7 +36,6 @@ public class Main {
 
     static void main() {
         MinecraftServer server = MinecraftServer.init(new Auth.Online());
-        stripRegistry.init();
 
         bossBar = BossBar.bossBar(
                 Component.text("MSPT: 0"),
@@ -47,7 +46,7 @@ public class Main {
 
         InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         instance.setChunkSupplier(LightingChunk::new);
-        instance.setGenerator(new CrossyChunkCreator(123));
+        instance.setGenerator(new CrossyChunkCreator(instance, 123, stripRegistry));
 
         GlobalEventHandler eventHandler = MinecraftServer.getGlobalEventHandler();
         registerEvents(eventHandler, instance);

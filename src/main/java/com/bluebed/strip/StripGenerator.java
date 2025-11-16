@@ -1,8 +1,10 @@
 package com.bluebed.strip;
 
 import net.minestom.server.coordinate.Point;
+import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.generator.GenerationUnit;
 
 public interface StripGenerator {
-    void generate(GenerationUnit unit, Point start, int startZ, int length);
+    Block generate(Instance instance, GenerationUnit unit, Block block, Point from, Point to);
 }
