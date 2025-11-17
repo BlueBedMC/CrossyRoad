@@ -11,6 +11,7 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.metadata.other.ArmorStandMeta;
@@ -74,11 +75,6 @@ public class Game {
         Pos spawnPosition = new Pos(0, 72, -2);
         chicken.setInstance(instance, spawnPosition);
 
-        List<EntityAttributesPacket.Property> properties = List.of(
-                new EntityAttributesPacket.Property(Attribute.SCALE, 3.6, new ArrayList<>())
-        );
-        player.sendPacket(new EntityAttributesPacket(chicken.getEntityId(), properties));
-
         // armor stand
         Pos playerPos = chicken.getPosition().add(-8.5, 14, -11).withPitch(45).withYaw((float) -37.5);
         player.teleport(playerPos);
@@ -95,6 +91,13 @@ public class Game {
 
         armorStand.setInstance(instance, playerPos);
         armorStand.addPassenger(player);
+        player.setGameMode(GameMode.SPECTATOR);
+        player.spectate(armorStand);
+
+        List<EntityAttributesPacket.Property> properties = List.of(
+                new EntityAttributesPacket.Property(Attribute.SCALE, 3.6, new ArrayList<>())
+        );
+        player.sendPacket(new EntityAttributesPacket(chicken.getEntityId(), properties));
     }
 
     public void tick() {
