@@ -106,6 +106,9 @@ public class Game {
         );
         player.sendPacket(new EntityAttributesPacket(chicken.getEntityId(), properties));
 
+        instance.setTimeRate(0);
+        instance.setTime(1000);
+
         startTitleAnimation();
     }
 
