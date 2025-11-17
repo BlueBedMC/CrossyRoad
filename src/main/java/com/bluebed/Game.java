@@ -6,6 +6,8 @@ import com.bluebed.font.SeparatorFont;
 import com.bluebed.structure.Structure;
 import lombok.Getter;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.coordinate.Pos;
@@ -198,6 +200,15 @@ public class Game {
 
         for (Player p : chicken.getViewers()) {
             chickenLookAndRotation(p);
+            p.playSound(
+                    Sound.sound(
+                            Key.key("minecraft:player.hop"),
+                            Sound.Source.MASTER,
+                            1.0f,
+                            1.0f
+                    ),
+                    p.getPosition()
+            );
         }
     }
 
