@@ -10,6 +10,7 @@ public enum StripType {
     GRASS(25, 20),
     PARK(5, 70),
     ROAD(25, 50),
+    KINDA_HOMELESS(1, 1),
     MOTORWAY(5, 90),
     RIVER(25, 60),
     TRAIN(15, 30);

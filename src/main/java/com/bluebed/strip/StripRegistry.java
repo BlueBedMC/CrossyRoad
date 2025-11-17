@@ -45,6 +45,10 @@ public class StripRegistry {
                 unit.modifier().fill(from, to, Block.BLUE_CONCRETE);
                 return Block.WATER;
             }),
+            StripType.KINDA_HOMELESS, ((game, instance, unit, block, from, to) -> {
+                unit.modifier().fill(from, to, Block.COAL_BLOCK);
+                return Block.COAL_BLOCK;
+            }),
             StripType.TRAIN, ((game, instance, unit, block, from, to) -> {
                 unit.modifier().fill(from, to, Block.BLACK_CONCRETE);
 

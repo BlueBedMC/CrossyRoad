@@ -56,6 +56,8 @@ public class CrossyChunkCreator implements Generator {
             newType = StripType.GRASS;
         } else if (roll < 70) {
             newType = StripType.RIVER;
+        } else if (roll < 75) {
+            newType = StripType.KINDA_HOMELESS;
         } else {
             newType = StripType.ROAD;
         }
