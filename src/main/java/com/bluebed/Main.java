@@ -46,6 +46,7 @@ public class Main {
         );
 
         lobbyInstance = MinecraftServer.getInstanceManager().createInstanceContainer();
+        lobbyInstance.setChunkSupplier(LightingChunk::new);
         lobbyInstance.setGenerator(unit -> unit.modifier().fillHeight(0, 40, Block.GRASS_BLOCK));
 
         GlobalEventHandler events = MinecraftServer.getGlobalEventHandler();

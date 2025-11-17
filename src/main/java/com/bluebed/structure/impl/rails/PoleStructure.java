@@ -62,7 +62,7 @@ public class PoleStructure extends Structure {
         int num = random.nextInt(2000);
         if (num != 67) return;
 
-        if (!(lastRung - System.currentTimeMillis() > 4000)) return;
+        if (!(lastRung > System.currentTimeMillis() - 4000)) return;
 
         ringing = true;
 

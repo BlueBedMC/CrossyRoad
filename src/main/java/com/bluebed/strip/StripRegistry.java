@@ -18,6 +18,23 @@ public class StripRegistry {
             }),
             StripType.ROAD, ((game, instance, unit, block, from, to) -> {
                 unit.modifier().fill(from, to, Block.BLACK_CONCRETE);
+
+//                double lanes = (from.z() - to.z() / 4);
+//                if (lanes > 1) {
+//                    for (int l = 0; l < lanes; l++) {
+//                        Pos lanesFrom = from.add((l * 4) - 1, 1, 0).asPos();
+//
+//                        for (int x = 0; x < to.x() - from.x(); x++) {
+//                            Entity laneBase = new Entity(EntityType.BLOCK_DISPLAY);
+//                            laneBase.editEntityMeta(BlockDisplayMeta.class, meta -> {
+//                                meta.setBlockState(Block.GRAY_CONCRETE);
+//                                meta.setScale(meta.getScale().withX(4).withY(0.1).withZ(0.2));
+//                            });
+//                            laneBase.setInstance(instance, lanesFrom.add(x + 6, 0, 0));
+//                        }
+//                    }
+//                }
+
                 return Block.BLACK_CONCRETE;
             }),
             StripType.MOTORWAY, ((game, instance, unit, block, from, to) -> {

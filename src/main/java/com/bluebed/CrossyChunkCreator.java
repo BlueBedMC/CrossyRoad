@@ -25,7 +25,7 @@ public class CrossyChunkCreator implements Generator {
         final Point start = unit.absoluteStart().withY(70);
         final Point size = unit.size();
 
-        if (start.chunkX() < -2 || start.chunkX() > 2) return;
+        if (start.chunkX() < -4 || start.chunkX() > 4) return;
 
         StripType oldType = null;
         Block block = null;
