@@ -20,6 +20,7 @@ public class PoleStructure extends Structure {
     private Entity leftLight;
     private Entity rightLight;
     private boolean ringing = false;
+    private long lastRung = System.currentTimeMillis();
 
     public PoleStructure(Pos spawn) {
         super(spawn);
@@ -60,9 +61,24 @@ public class PoleStructure extends Structure {
 
         int num = random.nextInt(2000);
         if (num != 67) return;
+
+        if (!(lastRung - System.currentTimeMillis() > 4000)) return;
+
         ringing = true;
 
         final Task[] holder = new Task[1];
+
+        for (Player viewer : leftLight.getViewers()) {
+            viewer.playSound(
+                    Sound.sound(
+                            Key.key("minecraft:train.alarm"),
+                            Sound.Source.MASTER,
+                            1.0f,
+                            1.0f
+                    ),
+                    viewer.getPosition()
+            );
+        }
 
         holder[0] = instance.scheduler().scheduleTask(new Runnable() {
             int runs = 0;
@@ -71,35 +87,37 @@ public class PoleStructure extends Structure {
             public void run() {
                 System.out.println("run");
                 // 2.5s
-                if (runs > 5) {
+                if (runs > 6) {
                     // send train after a small wait
+
+                    for (Player viewer : leftLight.getViewers()) {
+                        viewer.playSound(
+                                Sound.sound(
+                                        Key.key("minecraft:train.pass"),
+                                        Sound.Source.MASTER,
+                                        1.0f,
+                                        1.0f
+                                ),
+                                viewer.getPosition()
+                        );
+                    }
 
                     setDisplayBlock(leftLight, Block.BLACK_CONCRETE);
                     setDisplayBlock(rightLight, Block.BLACK_CONCRETE);
+                    lastRung = System.currentTimeMillis();
                     holder[0].cancel();
                     return;
                 }
 
                 if (runs == 0) {
                     setDisplayBlock(leftLight, Block.RED_STAINED_GLASS);
-                } else switchLights();
-
-                for (Player viewer : leftLight.getViewers()) {
-                    viewer.playSound(
-                            Sound.sound(
-                                    Key.key("minecraft:block.bell.use"),
-                                    Sound.Source.MASTER,
-                                    1.0f,
-                                    1.0f
-                            ),
-                            viewer.getPosition()
-                    );
-
+                } else if (runs < 5) {
+                    switchLights();
                 }
 
                 runs++;
             }
-        }, TaskSchedule.immediate(), TaskSchedule.tick(10));
+        }, TaskSchedule.immediate(), TaskSchedule.tick(5));
     }
 
     private void switchLights() {

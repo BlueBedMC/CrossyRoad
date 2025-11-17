@@ -1,6 +1,8 @@
 package com.bluebed;
 
+import com.bluebed.font.GoldFont;
 import com.bluebed.font.NormalFont;
+import com.bluebed.font.SeparatorFont;
 import com.bluebed.structure.Structure;
 import lombok.Getter;
 import net.kyori.adventure.bossbar.BossBar;
@@ -29,7 +31,8 @@ public class Game {
     private final Instance instance;
     private Entity armorStand;
     private Entity chicken;
-    private BossBar bossBar;
+    private BossBar scoreBossBar;
+    private BossBar coinsBossBar;
 
     private boolean removed = false;
 
@@ -49,14 +52,22 @@ public class Game {
 
     public void init() {
         // for stats and shi ig
-        bossBar = BossBar.bossBar(
+        scoreBossBar = BossBar.bossBar(
                 Component.text(""),
                 0.5F,
-                BossBar.Color.BLUE,
+                BossBar.Color.WHITE,
                 BossBar.Overlay.PROGRESS
         );
 
-        player.showBossBar(bossBar);
+        coinsBossBar = BossBar.bossBar(
+                Component.text(""),
+                0.5F,
+                BossBar.Color.WHITE,
+                BossBar.Overlay.PROGRESS
+        );
+
+        player.showBossBar(scoreBossBar);
+        player.showBossBar(coinsBossBar);
 
         // chicken
         chicken = new Entity(EntityType.CHICKEN);
@@ -101,16 +112,35 @@ public class Game {
     }
 
     private void updateBossBar() {
-        String numberStr = Integer.toString(currentScore);
-        StringBuilder result = new StringBuilder();
+        String scoreStr = Integer.toString(currentScore);
+        StringBuilder score = new StringBuilder();
 
-        for (char c : numberStr.toCharArray()) {
+        for (char c : scoreStr.toCharArray()) {
             int digit = c - '0';
-            result.append(NormalFont.getUnicodeFromNumber(digit));
+            score.append(NormalFont.getUnicodeFromNumber(digit));
         }
 
-        String scoreString = result.toString();
-        bossBar.name(Component.text(scoreString));
+        String scoreString = SeparatorFont.SCORE_LEFT.getUnicode() +
+                SeparatorFont.getUnicodeAmountForScore(score.length(), currentScore) +
+                score;
+
+        scoreBossBar.name(Component.text(scoreString));
+
+        // update two different boss bars because FUCK UNICODE CHARACTERS BRO
+        String coinsStr = Integer.toString(coins);
+        StringBuilder coinsBuilder = new StringBuilder();
+
+        for (char c : coinsStr.toCharArray()) {
+            int digit = c - '0';
+            coinsBuilder.append(GoldFont.getUnicodeFromNumber(digit));
+        }
+
+        String coinsString = SeparatorFont.COINS_RIGHT.getUnicode() +
+                SeparatorFont.getUnicodeAmountForScore(coinsBuilder.length(), coins) +
+                coinsBuilder +
+                GoldFont.COIN.getUnicode();
+
+        coinsBossBar.name(Component.text(coinsString));
     }
 
     private void chickenLookAndRotation(Player player) {
