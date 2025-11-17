@@ -14,6 +14,7 @@ import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
+import net.minestom.server.event.player.PlayerChatEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.server.ServerTickMonitorEvent;
@@ -106,6 +107,17 @@ public class Main {
             game.remove();
 
             MinecraftServer.getInstanceManager().unregisterInstance(instance);
+        });
+
+        events.addListener(PlayerChatEvent.class, event -> {
+            Player player = event.getPlayer();
+            String rawMessage = event.getRawMessage();
+            if (rawMessage.equalsIgnoreCase("titlesequence")) {
+                Game game = games.get(event.getPlayer().getUuid());
+                if (game == null) return;
+                event.setCancelled(true);
+                game.startTitleAnimation();
+            }
         });
     }
 

@@ -222,71 +222,32 @@ public class Game {
         structures.add(structure);
     }
 
-    private void startTitleAnimation() {
+    public void startTitleAnimation() {
         final Task[] holder = new Task[2];
 
+        player.sendActionBar(Component.text("\uE05A"));
         player.showTitle(Title.title(
-                Component.text("\uE05A"),
+                Component.text(""),
                 Component.text("\uE05B"),
                 0,
-                5,
+                100,
                 0
         ));
 
-        holder[0] = instance.scheduler().scheduleTask(new Runnable() {
-            int i = 100;
-
-            @Override
-            public void run() {
-                if (i == 120) {
-                    player.sendActionBar(Component.text("\uE05A"));
-                    player.showTitle(Title.title(
-                            Component.text(""),
-                            Component.text("\uE05B"),
-                            0,
-                            Integer.MAX_VALUE,
-                            0
-                    ));
-                    holder[0].cancel();
-                }
-
-                int max = 20;
-                int count = max - (i - 100);
-
-                StringBuilder builder = new StringBuilder();
-                for (int x = 0; x < count; x++) {
-                    builder.append("\uE05C").append("\uE05D");
-                }
-
-                player.sendActionBar(Component.text("\uE05A"));
-                player.showTitle(Title.title(
-                        Component.text(""),
-                        Component.text(builder + "\uE05B"),
-                                0,
-                                200,
-                        0
-                        ));
-
-                i++;
-            }
-        }, TaskSchedule.tick(20), TaskSchedule.tick(2));
-
-
         holder[1] = instance.scheduler().scheduleTask(() -> {
+            player.sendActionBar(Component.text("\uE04A"));
             player.showTitle(Title.title(
                     Component.text(""),
                     Component.text("\uE05B"),
                     0,
-                    Integer.MAX_VALUE,
+                    20,
                     0
             ));
-
-            player.sendActionBar(Component.text("\uE04A"));
 
             if (!started) return;
             holder[1].cancel();
             endTitleAnimation();
-        }, TaskSchedule.tick(110), TaskSchedule.tick(1));
+        }, TaskSchedule.tick(100), TaskSchedule.tick(1));
     }
 
     private void endTitleAnimation() {
